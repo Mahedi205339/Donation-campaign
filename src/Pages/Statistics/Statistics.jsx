@@ -1,9 +1,82 @@
-
+import { getStoredDonation } from "../../Utilities/localstorage";
+import { useEffect ,useState} from 'react';
+import { useLoaderData } from 'react-router-dom';
+import { Cell, Legend, Pie, PieChart, ResponsiveContainer } from 'recharts';
 const Statistics = () => {
+    const donations = useLoaderData();
+    
+
+    const [givenDonations, setGivenDonations] = useState([])
+
+    useEffect(() => {
+        const storedDonationIDs = getStoredDonation();
+        if (donations.length > 0) {
+            const donationed = [];
+
+            for (const id of storedDonationIDs) {
+                const donation = donations.find(donation => donation.id === id)
+                if (donation) {
+                    donationed.push(donation)
+                }
+            }
+            setGivenDonations(donationed)
+
+        }
+    }, [])
+    
+    // console.log(givenDonations.length)
+    
+
+    const data = [
+        { name: 'Donated', value: givenDonations.length },
+        { name: 'Total Donations', value: donations.length},
+
+    ];
+
+    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
+    const RADIAN = Math.PI / 180;
+    const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
+        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+        const x = cx + radius * Math.cos(-midAngle * RADIAN);
+        const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+        return (
+            <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
+                {`${(percent * 100).toFixed(0)}%`}
+            </text>
+        );
+    };
     return (
-        <div>
-            <h4>this is statistics</h4>
-        </div>
+        <>
+            <div>
+                <div className="row d-flex justify-content-center text-center">
+                    <h1 className='text-xl md:text-3xl font-bold'>Statistics</h1>
+                    <hr />
+                    <div className="col-md-8">
+                        <ResponsiveContainer width={400} height={400} className="text-center">
+                            <PieChart width={400} height={400}>
+                                <Legend layout="vertical" verticalAlign="top" align="top" />
+                                <Pie
+                                    data={data}
+                                    cx="50%"
+                                    cy="50%"
+                                    labelLine={false}
+                                    label={renderCustomizedLabel}
+                                    outerRadius={80}
+                                    fill="#8884d8"
+                                    dataKey="value"
+                                >
+                                    {data.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </div>
+        </>
     );
 };
 
